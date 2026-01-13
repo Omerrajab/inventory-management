@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 
 const formSchema = z.object({
-    quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+    quantity: z.number().min(1, "Quantity must be at least 1"),
     type: z.nativeEnum(MovementType),
     reason: z.string().optional(),
 });
@@ -55,7 +55,7 @@ export function UpdateStockDialog({ product, open, onOpenChange }: UpdateStockDi
             quantity: 1,
             type: MovementType.IN,
             reason: "",
-        } as FormValues,
+        },
     });
 
     const mutation = useMutation({
@@ -110,7 +110,11 @@ export function UpdateStockDialog({ product, open, onOpenChange }: UpdateStockDi
                                 <FormItem>
                                     <FormLabel>Quantity</FormLabel>
                                     <FormControl>
-                                        <Input type="number" {...field} />
+                                        <Input
+                                            type="number"
+                                            {...field}
+                                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
