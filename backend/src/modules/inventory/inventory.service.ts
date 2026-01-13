@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
@@ -11,13 +11,29 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/schemas/notification.schema';
 
 @Injectable()
-export class InventoryService {
+export class InventoryService implements OnModuleInit {
+    private readonly logger = new Logger(InventoryService.name);
     constructor(
         @InjectModel(Product.name) private productModel: Model<ProductDocument>,
         @InjectModel(StockMovement.name) private movementModel: Model<StockMovementDocument>,
         private readonly inventoryGateway: InventoryGateway,
         private readonly notificationsService: NotificationsService,
     ) { }
+
+    async onModuleInit() {
+        try {
+            // Clean up invalid categoryId values (empty strings) which cause CastError during populate
+            const result = await this.productModel.collection.updateMany(
+                { categoryId: '' },
+                { $set: { categoryId: null } }
+            );
+            if (result.modifiedCount > 0) {
+                this.logger.log(`Migrated ${result.modifiedCount} products with invalid categoryId reference.`);
+            }
+        } catch (error) {
+            this.logger.error('Failed to run migration for invalid categoryIds', error);
+        }
+    }
 
     async create(createProductDto: CreateProductDto): Promise<Product> {
         const qrCode = await QRCode.toDataURL(createProductDto.sku);

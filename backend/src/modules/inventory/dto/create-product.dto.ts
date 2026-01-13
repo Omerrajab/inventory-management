@@ -1,4 +1,5 @@
 import { IsString, IsNumber, IsOptional, Min, IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
     @IsString()
@@ -15,6 +16,7 @@ export class CreateProductDto {
 
     @IsString()
     @IsOptional()
+    @Transform(({ value }) => value === "" ? null : value)
     categoryId?: string;
 
     @IsNumber()
