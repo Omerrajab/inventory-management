@@ -44,6 +44,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var InventoryService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InventoryService = void 0;
 const common_1 = require("@nestjs/common");
@@ -55,16 +56,28 @@ const inventory_gateway_1 = require("./inventory.gateway");
 const QRCode = __importStar(require("qrcode"));
 const notifications_service_1 = require("../notifications/notifications.service");
 const notification_schema_1 = require("../notifications/schemas/notification.schema");
-let InventoryService = class InventoryService {
+let InventoryService = InventoryService_1 = class InventoryService {
     productModel;
     movementModel;
     inventoryGateway;
     notificationsService;
+    logger = new common_1.Logger(InventoryService_1.name);
     constructor(productModel, movementModel, inventoryGateway, notificationsService) {
         this.productModel = productModel;
         this.movementModel = movementModel;
         this.inventoryGateway = inventoryGateway;
         this.notificationsService = notificationsService;
+    }
+    async onModuleInit() {
+        try {
+            const result = await this.productModel.collection.updateMany({ categoryId: '' }, { $set: { categoryId: null } });
+            if (result.modifiedCount > 0) {
+                this.logger.log(`Migrated ${result.modifiedCount} products with invalid categoryId reference.`);
+            }
+        }
+        catch (error) {
+            this.logger.error('Failed to run migration for invalid categoryIds', error);
+        }
     }
     async create(createProductDto) {
         const qrCode = await QRCode.toDataURL(createProductDto.sku);
@@ -159,7 +172,7 @@ let InventoryService = class InventoryService {
     }
 };
 exports.InventoryService = InventoryService;
-exports.InventoryService = InventoryService = __decorate([
+exports.InventoryService = InventoryService = InventoryService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(product_schema_1.Product.name)),
     __param(1, (0, mongoose_1.InjectModel)(stock_movement_schema_1.StockMovement.name)),

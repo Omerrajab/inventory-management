@@ -1,3 +1,4 @@
+import { OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { StockMovementDocument, MovementType } from './schemas/stock-movement.schema';
@@ -5,12 +6,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InventoryGateway } from './inventory.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
-export declare class InventoryService {
+export declare class InventoryService implements OnModuleInit {
     private productModel;
     private movementModel;
     private readonly inventoryGateway;
     private readonly notificationsService;
+    private readonly logger;
     constructor(productModel: Model<ProductDocument>, movementModel: Model<StockMovementDocument>, inventoryGateway: InventoryGateway, notificationsService: NotificationsService);
+    onModuleInit(): Promise<void>;
     create(createProductDto: CreateProductDto): Promise<Product>;
     findAll(query?: any): Promise<any>;
     findOne(id: string): Promise<ProductDocument>;
